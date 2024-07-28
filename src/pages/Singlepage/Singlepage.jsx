@@ -1,119 +1,168 @@
-import React from 'react'
-import './singlepage.scss'
-import Slider from '../../components/slider/Slider'
-import {singlePostData, userData} from "../../lib/dummydata"
-import Map from '../../components/map/Map'
-function Singlepage() {
-  return (
-    <div className='singlepage'>
-        <div className="details">
-          <div className="wrapper">
-            <Slider images={singlePostData.images}/>
-            <div className="info">
-              <div className="top">
-                <div className="post">
-                  <h1>{singlePostData.title}</h1>
-                  <div className="address">
-                    <img src="./pin.png" alt="" />
-                    <span>{singlePostData.address}</span>
-                  </div>
-                  <div className="price">$ {singlePostData.price}</div>
-                </div>
-                <div className="user">
-                  <img src={userData.img} alt="" />
-                  <span>{userData.name}</span>
-                </div>
-              </div>
-              <div className="bottom">
-                {singlePostData.description}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="features">
-          <div className="wrapper">
-            <p className="title">General</p>
-            <div className='listVertical'>
-              <div className="feature">
-                <img src="/utility.png" alt="" />
-                <div className="featureText">
-                  <span>Utilities</span>
-                  <p>Renter is responsible</p>
-                </div>
-              </div>
-              <div className="feature">
-                <img src="/pet.png" alt="" />
-                <div className="featureText">
-                  <span>Pet Policy</span>
-                  <p>Pets allowed</p>
-                </div>
-              </div>
-              <div className="feature">
-                <img src="/fee.png" alt="" />
-                <div className="featureText">
-                  <span>Deposit</span>
-                  <p>3 Months rent</p>
-                </div>
-              </div>
-            </div>
-            <p className="title">Room size</p>
-            <div className="sizes">
-              <div className="size">
-                <img src="/size.png" alt="" />
-                <span>80 sqft</span>
-              </div>
-              <div className="size">
-                <img src="/bed.png" alt="" />
-                <span>1 bathroom</span>
-              </div>
-              <div className="size">
-                <img src="/bath.png" alt="" />
-                <span>2 bedroom</span>
-              </div>
-            </div>
-            <p className="title">Nearby Places</p>
-            <div className='listHorizontal'>
-            <div className="feature">
-                <img src="/school.png" alt="" />
-                <div className="featureText">
-                  <span>School</span>
-                  <p>250m away</p>
-                </div>
-              </div>
-              <div className="feature">
-                <img src="/bus.png" alt="" />
-                <div className="featureText">
-                  <span>Bus Stop</span>
-                  <p>100m away</p>
-                </div>
-              </div>
-              <div className="feature">
-                <img src="/restaurant.png" alt="" />
-                <div className="featureText">
-                  <span>Restaurant</span>
-                  <p>200m away</p>
-                </div>
-              </div>
-            </div>
-            <p className="title">Location</p>
-            <div className="mapContainer">
-              <Map items={[singlePostData]}/>
-            </div>
-            <div className="buttons">
-              <button>
-                <img src="/chat.png" alt="" />
-                Send a Message
-              </button>
-              <button>
-                <img src="/save.png" alt="" />
-                Save the Place
-              </button>
-            </div>
-          </div>
+import React, { useContext, useState } from "react";
+import "./singlepage.scss";
+import Slider from "../../components/slider/Slider";
+import Map from "../../components/map/Map";
+import { useLoaderData, useNavigate } from "react-router-dom";
+import DOMPurify from "dompurify";
+import {AuthContext} from "../../contextAPI/AuthContext"
+import apiRequest from "../../lib/apiRequest"
 
+function Singlepage() {
+  const post = useLoaderData();
+  const [saved,setSaved]=useState(post.isSaved)
+  const { currentUser } = useContext(AuthContext);
+  const navigate=useNavigate()
+  const handleSave = async () => {
+    setSaved((prev)=>!prev)
+    if(!currentUser){
+      navigate("/login")
+    }
+    try {
+      await apiRequest.post("/users/save",{postId:post.id})
+    } catch (err) {
+      console.log(err);
+      setSaved((prev)=>!prev)
+
+    }
+  };
+  const handleMessage= async()=>{
+    console.log(currentUser)
+    console.log(post.userId)
+    try{
+      await apiRequest.get("/chats",{userId:currentUser,receiverId:post.userId})
+    }catch(err){
+      console.log(err)
+    }
+  }
+ 
+  
+  return (
+    <div className="singlepage">
+      <div className="details">
+        <div className="wrapper">
+          <Slider images={post.images} />
+          <div className="info">
+            <div className="top">
+              <div className="post">
+                <h1>{post.title}</h1>
+                <div className="address">
+                  <img src="./pin.png" alt="" />
+                  <span>{post.address}</span>
+                </div>
+                <div className="price">$ {post.price}</div>
+              </div>
+              <div className="user">
+                <img src={post.user.avatar} alt="" />
+                <span>{post.user.username}</span>
+              </div>
+            </div>
+            <div
+              className="bottom"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(post.postDetail.desc),
+              }}
+            ></div>
+          </div>
         </div>
+      </div>
+      <div className="features">
+        <div className="wrapper">
+          <p className="title">General</p>
+          <div className="listVertical">
+            <div className="feature">
+              <img src="/utility.png" alt="" />
+              <div className="featureText">
+                <span>Utilities</span>
+                {post.postDetail.utilities === "owner" ? (
+                  <p>Owner is responsible</p>
+                ) : (
+                  <p>Tenant is responsible</p>
+                )}
+              </div>
+            </div>
+            <div className="feature">
+              <img src="/pet.png" alt="" />
+              <div className="featureText">
+                <span>Pet Policy</span>
+                {post.postDetail.pet === "allowed" ? (
+                  <p>Pets allowed</p>
+                ) : (
+                  <p>Pets not allowed</p>
+                )}
+              </div>
+            </div>
+            <div className="feature">
+              <img src="/fee.png" alt="" />
+              <div className="featureText">
+                <span>Deposit</span>
+                {post.postDetail.income}
+              </div>
+            </div>
+          </div>
+          <p className="title">Room size</p>
+          <div className="sizes">
+            <div className="size">
+              <img src="/size.png" alt="" />
+              <span>{post.postDetail.size} sqft</span>
+            </div>
+            <div className="size">
+              <img src="/bed.png" alt="" />
+              <span>{post.bedroom} bedroom</span>
+            </div>
+            <div className="size">
+              <img src="/bath.png" alt="" />
+              <span>{post.bathroom} bathroom</span>
+            </div>
+          </div>
+          <p className="title">Nearby Places</p>
+          <div className="listHorizontal">
+            <div className="feature">
+              <img src="/school.png" alt="" />
+              <div className="featureText">
+                <span>School</span>
+                <p>
+                  {post.postDetail.school > 999
+                    ? post.postDetail.school / 1000 + "km"
+                    : post.postDetail.school + "m"}{" "}
+                  away
+                </p>
+              </div>
+            </div>
+            <div className="feature">
+              <img src="/bus.png" alt="" />
+              <div className="featureText">
+                <span>Bus Stop</span>
+                <p>{post.postDetail.bus}m away</p>
+              </div>
+            </div>
+            <div className="feature">
+              <img src="/restaurant.png" alt="" />
+              <div className="featureText">
+                <span>Restaurant</span>
+                <p>{post.postDetail.restaurant}m away</p>
+              </div>
+            </div>
+          </div>
+          <p className="title">Location</p>
+          <div className="mapContainer">
+            <Map items={[post]} />
+          </div>
+          <div className="buttons">
+            <button onClick={handleMessage}>
+              <img src="/chat.png" alt="" />
+              Send a Message
+            </button>
+            <button onClick={handleSave} style={{
+              backgroundColor:saved?"#5261eb":"white"
+            }}>
+              <img src="/save.png" alt="" />
+              {saved? "Place saved":"Save the place"}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-  )
+  );
 }
 
-export default Singlepage
+export default Singlepage;

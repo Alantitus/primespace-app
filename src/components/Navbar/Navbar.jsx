@@ -1,10 +1,15 @@
 import "./navbar.scss";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../../contextAPI/AuthContext";
+import { useNotificationStore } from "../../lib/notificationStore";
 
 function Navbar() {
   const [open, setOpen] = useState(false);
-  const user = true;
+  const { currentUser } = useContext(AuthContext);
+  const fetch = useNotificationStore((state) => state.fetch);
+  const number = useNotificationStore((state) => state.number);
+  if (currentUser) fetch();
   return (
     <nav>
       <div className="left">
@@ -18,21 +23,19 @@ function Navbar() {
         {/* <Link to="/">Agents </Link> */}
       </div>
       <div className="right">
-        {user ? (
+        {currentUser ? (
           <div className="user">
-            <img src="" alt="" />
-            <span>John</span>
+            <img src={currentUser.avatar || "/noavatar.jpg"} alt="" />
+            <span>{currentUser.username}</span>
             <Link to="/profile" className="profile">
-            <div className="notification">
-              3
-            </div>
-            <span>Profile</span>
+             {number>0 && <div className="notification">{number}</div>}
+              <span>Profile</span>
             </Link>
           </div>
         ) : (
           <>
-            <Link to="">Sign in</Link>
-            <Link to="" className="register">
+            <Link to="/login">Sign in</Link>
+            <Link to="/register" className="register">
               Sign up
             </Link>
           </>
@@ -41,12 +44,22 @@ function Navbar() {
           <img src="./menu.png" alt="" onClick={() => setOpen(!open)} />
         </div>
         <div className={open ? "menu active" : "menu"}>
-          <Link className="link" to="/">Home </Link>
-          <Link className="link" to="/">About </Link>
-          <Link className="link" to="/contact">Contact </Link>
+          <Link className="link" to="/">
+            Home{" "}
+          </Link>
+          <Link className="link" to="/">
+            About{" "}
+          </Link>
+          <Link className="link" to="/contact">
+            Contact{" "}
+          </Link>
           {/* <Link to="/">Agents </Link> */}
-          <Link className="link" to="/">Sign in </Link>
-          <Link className="link" to="/">Sign up </Link>
+          <Link className="link" to="/">
+            Sign in{" "}
+          </Link>
+          <Link className="link" to="/">
+            Sign up{" "}
+          </Link>
         </div>
       </div>
     </nav>

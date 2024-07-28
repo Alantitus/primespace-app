@@ -31,10 +31,11 @@
                 }
                 button{
                     padding: 12px 24px;
-                    background-color: rgba(30, 106, 228, 0.932);
+                    background-color: rgba(18, 165, 18, 0.932);
                     color: #fff;
                     border: none;
                     cursor: pointer;
+                    border-radius: 5px;
                 }
             }
             .info{
@@ -46,6 +47,15 @@
                     display: flex;
                     align-items: center;
                     gap: 20px;
+                }
+                button{
+                    width: 100px;
+                    border: none;
+                    background-color: #ed3737;
+                    color: white;
+                    padding: 10px 20px;
+                    cursor: pointer;
+                    border-radius: 5px;
                 }
                 img{
                     width: 40px;
